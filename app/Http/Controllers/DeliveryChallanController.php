@@ -60,7 +60,7 @@ class DeliveryChallanController extends Controller
             }
             abort_if($created === 0, 422, 'Enter at least one delivery quantity.');
             $totalRemaining=(float)DB::table('invoice_items')->where('invoice_id',$invoice->id)->sum('quantity');
-            $totalDelivered=(float)DB::table('delivery_challan_items')->where('invoice_id',$invoice->id)->sum('quantity');
+            $totalDelivered=(float)DB::table('delivery_challan_items')->join('delivery_challans','delivery_challans.id','=','delivery_challan_items.delivery_challan_id')->where('delivery_challans.invoice_id',$invoice->id)->sum('delivery_challan_items.quantity');
             $invoice->update(['status'=>$totalDelivered >= $totalRemaining - 0.0001 ? 'delivered' : 'partially_delivered']);
             return $challan;
         });
