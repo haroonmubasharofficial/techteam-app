@@ -83,10 +83,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
     Route::get('/stock/{product}/ledger', [StockController::class, 'ledger'])->name('stock.ledger');
     Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock_adjustments.index');
-    Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock_adjustments.create');
-    Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock_adjustments.store');
     Route::get('/stock-adjustments/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('stock_adjustments.show');
     Route::middleware('role:admin')->group(function () {
+        Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock_adjustments.create');
+        Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock_adjustments.store');
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
