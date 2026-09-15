@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\Quotation;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class QuotationController extends Controller
+{
+    public function create(): View
+    {
+        return view('quotations.create', [
+            'customers' => Customer::orderBy('company_name')->get(),
+            'products' => Product::where('is_active', true)->orderBy('name')->get(),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'customer_id' => ['required', 'exists:customers,id'],
+            'quote_date' => ['required', 'date'],
+            'reference' => ['nullable', 'string', 'max:100'],
+            'summary' => ['nullable', 'string', 'max:255'],
+            'items' => ['required', 'array', 'min:1', 'max:15'],
+            'items.*.description' => ['required', 'string', 'max:500'],
+            'items.*.quantity' => ['required', 'numeric', 'gt:0'],
+            'items.*.purchase_cost' => ['required', 'numeric', 'gte:0'],
+            'items.*.delivery_cost' => ['nullable', 'numeric', 'gte:0'],
+            'items.*.other_cost' => ['nullable', 'numeric', 'gte:0'],
+            'items.*.selling_price' => ['required', 'numeric', 'gte:0'],
+            'items.*.discount' => ['nullable', 'numeric', 'gte:0'],
+            'items.*.tax_rate' => ['nullable', 'numeric', 'gte:0'],
+        ]);
+
+        $quotation = Quotation::create([
+            'customer_id' => $data['customer_id'],
+            'quote_date' => $data['quote_date'],
+            'reference' => $data['reference'] ?? null,
+            'summary' => $data['summary'] ?? null,
+            'status' => 'draft',
+            'currency' => 'PKR',
+        ]);
+
+        foreach ($data['items'] as $index => $item) {
+            $qty = (float) $item['quantity'];
+            $cost = (float) $item['purchase_cost'];
+            $delivery = (float) ($item['delivery_cost'] ?? 0);
+            $other = (float) ($item['other_cost'] ?? 0);
+            $selling = (float) $item['selling_price'];
+            $discount = (float) ($item['discount'] ?? 0);
+            $taxRate = (float) ($item['tax_rate'] ?? 0);
+            $costTotal = ($cost + $delivery + $other) * $qty;
+            $net = max(0, ($selling * $qty) - $discount);
+            $tax = $net * $taxRate / 100;
+            $profit = $net - $costTotal;
+
+            $quotation->items()->create([
+                'line_no' => $index + 1,
+                'description' => $item['description'],
+                'quantity' => $qty,
+                'unit' => 'Unit',
+                'purchase_cost' => $cost,
+                'delivery_cost' => $delivery,
+                'other_cost' => $other,
+                'selling_price' => $selling,
+                'discount' => $discount,
+                'tax_rate' => $taxRate,
+                'tax_amount' => $tax,
+                'estimated_cost_total' => $costTotal,
+                'estimated_profit' => $profit,
+                'estimated_margin_percent' => $net > 0 ? ($profit / $net) * 100 : 0,
+            ]);
+        }
+
+        return redirect()->route('quotations.create')->with('success', 'Quotation draft saved.');
+    }
+}

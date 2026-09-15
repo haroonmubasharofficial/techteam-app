@@ -1,0 +1,12 @@
+{
+  "name": "techteam-business-system",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "vite build", "dev": "vite"},
+  "devDependencies": {
+    "@tailwindcss/vite": "latest",
+    "tailwindcss": "latest",
+    "vite": "latest",
+    "laravel-vite-plugin": "latest"
+  }
+}
