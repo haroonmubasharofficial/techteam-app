@@ -79,6 +79,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::get('/stock/{product}/ledger', [StockController::class, 'ledger'])->name('stock.ledger');
     Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock_adjustments.index');
     Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock_adjustments.create');
     Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock_adjustments.store');
