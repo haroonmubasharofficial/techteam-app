@@ -17,6 +17,8 @@
             <a href="{{ route('purchases.index') }}" class="hover:text-green-700">Purchases</a>
             <a href="{{ route('customer_payments.index') }}" class="hover:text-green-700">Receipts</a>
             <a href="{{ route('supplier_payments.index') }}" class="hover:text-green-700">Supplier Payments</a>
+            <a href="{{ route('parties.customers') }}" class="hover:text-green-700">Customers</a>
+            <a href="{{ route('parties.suppliers') }}" class="hover:text-green-700">Suppliers</a>
             <a href="{{ route('receivables.index') }}" class="hover:text-green-700">Receivables</a>
             <a href="{{ route('payables.index') }}" class="hover:text-green-700">Payables</a>
         </nav>
