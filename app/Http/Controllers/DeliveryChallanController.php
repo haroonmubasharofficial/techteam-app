@@ -27,6 +27,7 @@ class DeliveryChallanController extends Controller
     public function createFromInvoice(Invoice $invoice): View
     {
         $invoice->load(['customer','items.product']);
+        abort_if($invoice->status === 'draft', 422, 'A draft invoice cannot be delivered.');
         abort_unless($invoice->items->isNotEmpty(), 422, 'The invoice has no items to deliver.');
         return view('delivery_challans.create', compact('invoice'));
     }
@@ -34,6 +35,7 @@ class DeliveryChallanController extends Controller
     public function storeFromInvoice(Request $request, Invoice $invoice): RedirectResponse
     {
         $invoice->load('items.product');
+        abort_if($invoice->status === 'draft', 422, 'A draft invoice cannot be delivered.');
         $data = $request->validate([
             'challan_date'=>['required','date'], 'delivery_date'=>['nullable','date'], 'shipped_date'=>['nullable','date'],
             'delivery_challan_for'=>['nullable','string','max:255'], 'shipping_to'=>['nullable','string','max:255'], 'terms'=>['nullable','string'],
@@ -47,19 +49,23 @@ class DeliveryChallanController extends Controller
             $challan->challan_number = app(DocumentNumberService::class)->next('delivery_challan', $data['challan_date']);
             $challan->fill(['customer_id'=>$invoice->customer_id,'invoice_id'=>$invoice->id,'challan_date'=>$data['challan_date'],'delivery_date'=>$data['delivery_date']??null,'shipped_date'=>$data['shipped_date']??null,'delivery_challan_for'=>$data['delivery_challan_for']??$invoice->summary,'shipping_to'=>$data['shipping_to']??$invoice->customer->address,'status'=>'issued','terms'=>$data['terms']??null])->save();
             $created = 0;
+            $requestedStockOut = [];
             foreach ($invoice->items as $index=>$item) {
                 $qty=(float)($data['items'][$index]['quantity']??0);
                 if ($qty <= 0) continue;
                 $previouslyDelivered=(float)DB::table('delivery_challan_items')->where('invoice_item_id',$item->id)->whereExists(function($q)use($invoice){$q->select(DB::raw(1))->from('delivery_challans')->whereColumn('delivery_challans.id','delivery_challan_items.delivery_challan_id')->where('delivery_challans.invoice_id',$invoice->id);})->sum('quantity');
                 $remaining=max(0,(float)$item->quantity-$previouslyDelivered);
                 abort_if($qty > $remaining + 0.0001, 422, "Delivery quantity exceeds remaining quantity for {$item->description}. Remaining: {$remaining}.");
-                if ($item->product_id) {
-                    $available=(float)DB::table('stock_transactions')->where('warehouse_id',$warehouseId)->where('product_id',$item->product_id)->sum(DB::raw('quantity_in - quantity_out'));
-                    abort_if($qty > $available + 0.0001, 422, "Insufficient stock for {$item->description}. Available: {$available}.");
-                }
+                if ($item->product_id) $requestedStockOut[$item->product_id] = ($requestedStockOut[$item->product_id] ?? 0) + $qty;
                 $challan->items()->create(['invoice_item_id'=>$item->id,'product_id'=>$item->product_id,'line_no'=>$index+1,'item_name'=>$item->description,'serial_number'=>$data['items'][$index]['serial_number']??null,'quantity'=>$qty,'unit'=>$item->unit]);
-                if ($item->product_id) DB::table('stock_transactions')->insert(['warehouse_id'=>$warehouseId,'product_id'=>$item->product_id,'invoice_item_id'=>$item->id,'transaction_type'=>'delivery','transaction_date'=>now(),'quantity_in'=>0,'quantity_out'=>$qty,'unit_cost'=>$item->actual_cost_unit,'reference'=>$challan->challan_number,'notes'=>'Delivery against invoice '.$invoice->invoice_number,'created_at'=>now(),'updated_at'=>now()]);
                 $created++;
+            }
+            foreach ($requestedStockOut as $productId => $requestedQty) {
+                $available=(float)DB::table('stock_transactions')->where('warehouse_id',$warehouseId)->where('product_id',$productId)->lockForUpdate()->selectRaw('COALESCE(SUM(quantity_in - quantity_out),0) AS qty')->value('qty');
+                abort_if($requestedQty > $available + 0.0001, 422, "Insufficient stock for product ID {$productId}. Available: {$available}.");
+            }
+            foreach ($challan->items as $challanItem) {
+                if ($challanItem->product_id) DB::table('stock_transactions')->insert(['warehouse_id'=>$warehouseId,'product_id'=>$challanItem->product_id,'invoice_item_id'=>$challanItem->invoice_item_id,'transaction_type'=>'delivery','transaction_date'=>now(),'quantity_in'=>0,'quantity_out'=>$challanItem->quantity,'unit_cost'=>$invoice->items->firstWhere('id',$challanItem->invoice_item_id)?->actual_cost_unit ?? 0,'reference'=>$challan->challan_number,'notes'=>'Delivery against invoice '.$invoice->invoice_number,'created_at'=>now(),'updated_at'=>now()]);
             }
             abort_if($created === 0, 422, 'Enter at least one delivery quantity.');
             $totalRemaining=(float)DB::table('invoice_items')->where('invoice_id',$invoice->id)->sum('quantity');
