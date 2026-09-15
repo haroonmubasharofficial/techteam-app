@@ -1,0 +1,21 @@
+@extends('layouts.app')
+@section('content')
+<h1 class="text-2xl font-bold">New Customer Receipt</h1>
+<p class="mb-5 text-sm text-gray-500">Record cash/bank receipt and optionally allocate it to outstanding invoices.</p>
+@if($errors->any())<div class="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-700"><ul class="list-disc pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+<form method="post" action="{{ route('customer_payments.store') }}" x-data="paymentForm()" class="space-y-5">@csrf
+<div class="grid gap-4 rounded-xl border bg-white p-5 md:grid-cols-3">
+<label>Customer<select name="customer_id" x-model="customerId" @change="loadInvoices" required class="mt-1 w-full rounded-lg border px-3 py-2"><option value="">Select customer</option>@foreach($customers as $customer)<option value="{{ $customer->id }}">{{ $customer->company_name }}</option>@endforeach</select></label>
+<label>Payment Date<input type="date" name="payment_date" value="{{ old('payment_date',date('Y-m-d')) }}" required class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+<label>Amount (PKR)<input type="number" step="0.01" min="0.01" name="amount" x-model.number="amount" required class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+<label>Payment Method<select name="payment_method" class="mt-1 w-full rounded-lg border px-3 py-2">@foreach(['Cash','Bank Transfer','Cheque','Card','Online','Other'] as $method)<option>{{ $method }}</option>@endforeach</select></label>
+<label>Reference<input name="reference" value="{{ old('reference') }}" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="Cheque no., bank ref, etc."></label>
+<label>Notes<input name="notes" value="{{ old('notes') }}" class="mt-1 w-full rounded-lg border px-3 py-2"></label>
+</div>
+<div class="rounded-xl border bg-white p-5"><div class="mb-3 flex justify-between"><h2 class="font-semibold">Allocate to Invoices</h2><span class="text-sm text-gray-500">Allocated: PKR <span x-text="allocated.toFixed(2)"></span></span></div>
+<div x-show="loading" class="text-sm text-gray-500">Loading outstanding invoices…</div><div x-show="!loading && customerId && invoices.length === 0" class="text-sm text-gray-500">No outstanding invoices for this customer. The receipt can remain an advance/unallocated amount.</div>
+<div class="overflow-x-auto" x-show="invoices.length"><table class="min-w-full text-sm"><thead><tr class="border-b"><th class="p-2 text-left">Invoice</th><th class="p-2 text-left">Date</th><th class="p-2 text-right">Outstanding</th><th class="p-2 text-right">Allocate</th></tr></thead><tbody><template x-for="invoice in invoices" :key="invoice.id"><tr class="border-b"><td class="p-2" x-text="invoice.invoice_number"></td><td class="p-2" x-text="invoice.invoice_date"></td><td class="p-2 text-right" x-text="'PKR ' + invoice.outstanding.toFixed(2)"></td><td class="p-2 text-right"><input type="hidden" :name="`allocations[${invoice.id}][invoice_id]`" :value="invoice.id"><input type="number" min="0" step="0.01" :max="Math.min(invoice.outstanding, Math.max(0, amount - allocated + current(invoice.id)))" :name="`allocations[${invoice.id}][amount]`" x-model.number="invoice.allocate" @input="normalize(invoice)" class="w-36 rounded border px-2 py-1 text-right"></td></tr></template></tbody></table></div></div>
+<div class="flex justify-end gap-2"><a href="{{ route('customer_payments.index') }}" class="rounded-lg border px-4 py-2">Cancel</a><button class="rounded-lg bg-black px-5 py-2 text-white">Post Receipt</button></div>
+</form>
+<script>function paymentForm(){return{customerId:'',amount:0,invoices:[],loading:false,get allocated(){return this.invoices.reduce((s,i)=>s+(Number(i.allocate)||0),0)},async loadInvoices(){this.invoices=[];if(!this.customerId)return;this.loading=true;try{this.invoices=await fetch('{{ url('/customers') }}/'+this.customerId+'/outstanding-invoices').then(r=>r.json());}finally{this.loading=false}},current(id){let i=this.invoices.find(x=>x.id===id);return i?Number(i.allocate)||0:0},normalize(i){i.allocate=Math.max(0,Math.min(Number(i.outstanding)||0,Number(i.allocate)||0,Number(this.amount)||0));if(this.allocated>(Number(this.amount)||0))i.allocate=Math.max(0,i.allocate-(this.allocated-Number(this.amount)));}}}</script>
+@endsection
