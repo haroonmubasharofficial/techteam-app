@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('invoice_number')->unique()->nullable();
             $table->foreignId('customer_id')->constrained()->restrictOnDelete();
-            $table->foreignId('quotation_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('quotation_id')->nullable()->unique()->constrained()->nullOnDelete();
             $table->date('invoice_date');
             $table->string('reference')->nullable();
             $table->string('summary')->nullable();
