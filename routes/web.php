@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\StockAdjustmentController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\SupplierPaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,7 +36,6 @@ Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.
 Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
 Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
 Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
-
 Route::get('/customer-payments', [CustomerPaymentController::class, 'index'])->name('customer_payments.index');
 Route::get('/customer-payments/create', [CustomerPaymentController::class, 'create'])->name('customer_payments.create');
 Route::post('/customer-payments', [CustomerPaymentController::class, 'store'])->name('customer_payments.store');
@@ -44,7 +44,6 @@ Route::get('/customer-payments/{payment}/print', [CustomerPaymentController::cla
 Route::get('/receivables', [CustomerPaymentController::class, 'receivables'])->name('receivables.index');
 Route::get('/customers/{customer}/outstanding-invoices', [CustomerPaymentController::class, 'invoices'])->name('customers.outstandingInvoices');
 Route::get('/customers/{customer}/statement', [CustomerPaymentController::class, 'statement'])->name('customer_payments.statement');
-
 Route::get('/supplier-payments', [SupplierPaymentController::class, 'index'])->name('supplier_payments.index');
 Route::get('/supplier-payments/create', [SupplierPaymentController::class, 'create'])->name('supplier_payments.create');
 Route::post('/supplier-payments', [SupplierPaymentController::class, 'store'])->name('supplier_payments.store');
@@ -53,18 +52,16 @@ Route::get('/supplier-payments/{payment}/print', [SupplierPaymentController::cla
 Route::get('/payables', [SupplierPaymentController::class, 'payables'])->name('payables.index');
 Route::get('/suppliers/{supplier}/outstanding-purchases', [SupplierPaymentController::class, 'purchases'])->name('suppliers.outstandingPurchases');
 Route::get('/suppliers/{supplier}/statement', [SupplierPaymentController::class, 'statement'])->name('supplier_payments.statement');
-
 Route::get('/customers', [PartyController::class, 'customers'])->name('parties.customers');
 Route::get('/customers/create', [PartyController::class, 'createCustomer'])->name('parties.customer_create');
 Route::post('/customers', [PartyController::class, 'storeCustomer'])->name('parties.customer_store');
 Route::get('/suppliers', [PartyController::class, 'suppliers'])->name('parties.suppliers');
 Route::get('/suppliers/create', [PartyController::class, 'createSupplier'])->name('parties.supplier_create');
 Route::post('/suppliers', [PartyController::class, 'storeSupplier'])->name('parties.supplier_store');
-
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
 Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-
+Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
 Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock_adjustments.index');
 Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock_adjustments.create');
 Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock_adjustments.store');
