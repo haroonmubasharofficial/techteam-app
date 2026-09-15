@@ -41,12 +41,14 @@ class QuotationController extends Controller
 
     public function edit(Quotation $quotation): View
     {
+        abort_if($quotation->status === 'invoiced', 409, 'An invoiced quotation cannot be edited.');
         $quotation->load('items.product');
         return view('quotations.edit', ['quotation' => $quotation, 'customers' => Customer::where('is_active', true)->orderBy('company_name')->get(), 'products' => Product::where('is_active', true)->orderBy('name')->get()]);
     }
 
     public function update(Request $request, Quotation $quotation): RedirectResponse
     {
+        abort_if($quotation->status === 'invoiced', 409, 'An invoiced quotation cannot be edited.');
         $data = $this->validated($request);
         DB::transaction(function () use ($quotation, $data) {
             $old = $quotation->load('items')->toArray();
