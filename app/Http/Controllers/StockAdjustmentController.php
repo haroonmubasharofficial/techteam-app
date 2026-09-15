@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\StockAdjustment;
 use App\Models\Warehouse;
+use App\Services\DocumentNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class StockAdjustmentController extends Controller {
@@ -11,7 +12,7 @@ class StockAdjustmentController extends Controller {
  public function store(Request $request){
   $data=$request->validate(['warehouse_id'=>['required','exists:warehouses,id'],'adjustment_date'=>['required','date'],'reason'=>['required','string','max:255'],'notes'=>['nullable','string'],'items'=>['required','array','min:1','max:15'],'items.*.product_id'=>['required','exists:products,id'],'items.*.qty'=>['required','numeric','gt:0'],'items.*.unit'=>['required','string','max:30'],'items.*.unit_cost'=>['required','numeric','gte:0'],'items.*.direction'=>['required','in:in,out'],'items.*.notes'=>['nullable','string','max:255']]);
   $adjustment=DB::transaction(function() use($data){
-   $year=now()->format('Y'); $last=StockAdjustment::where('adjustment_number','like',"ADJ-$year-%")->lockForUpdate()->latest('id')->first(); $next=$last?((int)substr($last->adjustment_number,-5))+1:1; $number="ADJ-$year-".str_pad($next,5,'0',STR_PAD_LEFT);
+   $number=app(DocumentNumberService::class)->next('stock_adjustment',$data['adjustment_date']);
    $adjustment=StockAdjustment::create(['adjustment_number'=>$number,'warehouse_id'=>$data['warehouse_id'],'adjustment_date'=>$data['adjustment_date'],'reason'=>$data['reason'],'status'=>'posted','notes'=>$data['notes']??null]);
    foreach($data['items'] as $line){
     if($line['direction']==='out'){ $available=(float)DB::table('stock_transactions')->where('warehouse_id',$data['warehouse_id'])->where('product_id',$line['product_id'])->selectRaw('COALESCE(SUM(quantity_in-quantity_out),0) AS qty')->value('qty'); if($line['qty']>$available) abort(422,'Insufficient stock for the selected product.'); }
