@@ -1,13 +1,50 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ $invoice->invoice_number }}</title><style>
-*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;background:#f3f4f6;font-size:13px;line-height:1.45}.sheet{width:8.5in;max-width:100%;margin:24px auto;background:#fff;padding:0.55in 0.6in;min-height:10.5in}.actions{margin-bottom:18px}.actions button{border:0;background:#111827;color:#fff;padding:9px 16px;border-radius:5px;cursor:pointer}.header{display:flex;justify-content:space-between;gap:30px;border-bottom:2px solid #111;padding-bottom:18px}.company{font-size:20px;font-weight:700}.doc-title{text-align:right;font-size:24px;font-weight:700}.doc-no{font-size:13px;margin-top:4px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:22px 0}.box{border:1px solid #ddd;padding:12px;min-height:90px}.label{font-size:11px;text-transform:uppercase;color:#555;font-weight:700}.items{width:100%;border-collapse:collapse}.items th,.items td{border:1px solid #bbb;padding:8px}.items th{background:#f1f1f1;font-size:12px}.right{text-align:right}.totals{width:310px;margin:18px 0 0 auto}.totals div{display:flex;justify-content:space-between;padding:3px 0}.grand{border-top:2px solid #111;margin-top:6px;padding-top:7px!important;font-size:15px;font-weight:700}.terms{margin-top:32px;border-top:1px solid #ccc;padding-top:14px}.sign{margin-top:75px;text-align:right}.sign span{display:inline-block;border-top:1px solid #111;padding:8px 45px 0}@media(max-width:650px){body{background:#fff}.sheet{width:100%;margin:0;padding:20px;min-height:0}.meta{grid-template-columns:1fr}.header{flex-direction:column}.doc-title{text-align:left}.totals{width:100%}.items{font-size:11px}.items th,.items td{padding:5px}}@media print{body{background:#fff}.sheet{width:auto;margin:0;padding:0;max-width:none;min-height:0}.actions{display:none}@page{size:Letter;margin:0.45in}}
-</style></head><body><div class="sheet">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invoice {{ $invoice->invoice_number }}</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:"Times New Roman",Times,serif;color:#111;margin:0;background:#eee;font-size:13px;line-height:1.25}
+.sheet{width:8.5in;min-height:11in;margin:20px auto;background:#fff;padding:.92in .42in .72in;position:relative}
+.actions{position:fixed;top:15px;right:15px;z-index:10}.actions button{border:0;background:#111827;color:#fff;padding:9px 16px;border-radius:4px;cursor:pointer}
+.doc-meta{width:180px;border-collapse:collapse;margin-bottom:38px;font-size:12px}.doc-meta td{border:1px solid #222;padding:3px 6px}.doc-meta td:first-child{font-weight:700;width:58%}
+.title{text-align:center;font-size:20px;font-weight:700;margin:0 0 58px;letter-spacing:.3px}
+.office{text-align:right;font-size:12px;font-weight:700;margin-top:-42px;margin-bottom:12px}
+.client{width:100%;border-collapse:collapse;margin-bottom:0;font-size:13px}.client td{border-bottom:1px solid #222;padding:4px 5px;vertical-align:middle;height:25px}.client td:first-child{width:95px;font-weight:700}.client td:nth-child(2){padding-left:12px}
+.items{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}.items th,.items td{border:1px solid #222;padding:5px 6px;height:26px}.items th{font-weight:700;text-align:center}.items .sr{width:9%}.items .desc{width:53%}.items .qty{width:12%}.items .unit{width:13%}.items .total{width:17%}.right{text-align:right}.center{text-align:center}
+.items tbody tr.blank td{height:25px}
+.total-row td{font-weight:700;height:27px}.total-label{text-align:right}.total-value{text-align:right;white-space:nowrap}
+.terms{margin-top:18px;font-size:12px}.terms-title{text-align:center;font-size:13px;font-weight:700;margin-bottom:6px}.terms ol{margin:0;padding-left:25px}.terms li{padding:1px 0}
+.sign{margin-top:44px;text-align:right;font-size:12px}.sign-line{display:inline-block;min-width:170px;border-top:1px solid #222;padding-top:4px;text-align:center}
+@media(max-width:650px){body{background:#fff}.sheet{width:100%;min-height:0;margin:0;padding:25px 18px}.actions{position:static;margin-bottom:15px}.title{margin-bottom:35px}.doc-meta{margin-bottom:25px}.items{font-size:11px}.items th,.items td{padding:4px}.client td:first-child{width:75px}}
+@media print{body{background:#fff}.sheet{width:auto;min-height:0;margin:0;padding:.92in .42in .72in}.actions{display:none}@page{size:Letter;margin:0}}
+</style>
+</head>
+<body>
+<div class="sheet">
 <div class="actions"><button onclick="window.print()">Print</button></div>
-<header class="header"><div><div class="company">IT Supplies, Services & Support</div><div>Invoice</div></div><div class="doc-title">INVOICE<div class="doc-no">{{ $invoice->invoice_number }}</div></div></header>
-<div class="meta"><div class="box"><div class="label">Bill To</div><strong>{{ $invoice->customer->company_name }}</strong><br>{{ $invoice->customer->address }}<br>{{ $invoice->customer->phone ?: $invoice->customer->mobile }}</div><div class="box"><div><span class="label">Date</span> {{ $invoice->invoice_date?->format('d-M-Y') }}</div><div><span class="label">Reference</span> {{ $invoice->reference ?: '—' }}</div><div><span class="label">Summary</span> {{ $invoice->summary ?: '—' }}</div></div></div>
-<table class="items"><thead><tr><th>Sr.</th><th>Description</th><th class="right">Qty</th><th class="right">Unit Price (PKR)</th><th class="right">Amount (PKR)</th></tr></thead><tbody>@foreach($invoice->items as $item)<tr><td>{{ $item->line_no }}</td><td>{{ $item->description }}</td><td class="right">{{ rtrim(rtrim(number_format($item->quantity,4,'.',''),'0'),'.') }} {{ $item->unit }}</td><td class="right">{{ number_format($item->selling_price_unit,2) }}</td><td class="right">{{ number_format($item->selling_price_unit*$item->quantity-$item->discount+$item->tax_amount,2) }}</td></tr>@endforeach</tbody></table>
-<div class="totals"><div><span>Subtotal</span><span>{{ number_format($invoice->subtotal,2) }}</span></div><div><span>Discount</span><span>{{ number_format($invoice->discount_total,2) }}</span></div><div><span>Tax</span><span>{{ number_format($invoice->tax_total,2) }}</span></div><div class="grand"><span>Total PKR</span><span>{{ number_format($invoice->total_amount,2) }}</span></div></div>
-@if($invoice->terms)<div class="terms"><strong>Terms & Conditions</strong><div style="white-space:pre-line">{{ $invoice->terms }}</div></div>@endif
-<div class="sign"><span>Authorized Signature</span></div>
-</div></body></html>
+<table class="doc-meta"><tr><td>Date:</td><td>{{ $invoice->invoice_date?->format('d-m-y') }}</td></tr><tr><td>Invoice #</td><td>{{ $invoice->invoice_number }}</td></tr></table>
+<h1 class="title">INVOICE</h1>
+<div class="office">ETN - HO</div>
+<table class="client">
+<tr><td>Client Name</td><td>{{ $invoice->customer->contact_person ? $invoice->customer->contact_person.' ' : '' }}{{ $invoice->customer->company_name }}</td></tr>
+<tr><td>Address</td><td>{{ $invoice->customer->address }}</td></tr>
+<tr><td>Summary</td><td>{{ $invoice->summary ?: '—' }}</td></tr>
+</table>
+<table class="items">
+<thead><tr><th class="sr">Sr. #</th><th class="desc">Description</th><th class="qty">Quantity</th><th class="unit">Unit Price</th><th class="total">Total Price</th></tr></thead>
+<tbody>
+@foreach($invoice->items as $item)
+<tr><td class="center">{{ $item->line_no }}</td><td>{{ $item->description }}</td><td class="center">{{ rtrim(rtrim(number_format($item->quantity,4,'.',''),'0'),'.') }}</td><td class="right">{{ number_format($item->selling_price_unit,0) }}</td><td class="right">{{ number_format($item->selling_price_unit*$item->quantity-$item->discount+$item->tax_amount,0) }}</td></tr>
+@endforeach
+@for($i=$invoice->items->count();$i<8;$i++)<tr class="blank"><td></td><td></td><td></td><td></td><td></td></tr>@endfor
+<tr class="total-row"><td colspan="4" class="total-label">Total (PKR)</td><td class="total-value">{{ number_format($invoice->total_amount,0) }}/-</td></tr>
+</tbody>
+</table>
+@if($invoice->terms)
+<div class="terms"><div class="terms-title">TERMS &amp; CONDITIONS</div><ol>@foreach(preg_split('/\r\n|\r|\n/', trim($invoice->terms)) as $term) @if(trim($term)!=='')<li>{{ preg_replace('/^\s*\(?\d+\)?[\.\-:]?\s*/','',trim($term)) }}</li>@endif @endforeach</ol></div>
+@endif
+<div class="sign"><span class="sign-line">On behalf of Tech Team</span></div>
+</div>
+</body></html>
