@@ -2,12 +2,12 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/dashboard', DashboardController::class)->name('dashboard');
-
 Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations.index');
 Route::get('/quotations/create', [QuotationController::class, 'create'])->name('quotations.create');
 Route::post('/quotations', [QuotationController::class, 'store'])->name('quotations.store');
@@ -17,7 +17,10 @@ Route::put('/quotations/{quotation}', [QuotationController::class, 'update'])->n
 Route::get('/quotations/{quotation}/print', [QuotationController::class, 'print'])->name('quotations.print');
 Route::get('/quotations/{quotation}/invoice', [InvoiceController::class, 'createFromQuotation'])->name('invoices.createFromQuotation');
 Route::post('/quotations/{quotation}/invoice', [InvoiceController::class, 'storeFromQuotation'])->name('invoices.storeFromQuotation');
-
 Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
 Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
 Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
