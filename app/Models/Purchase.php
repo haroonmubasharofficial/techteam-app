@@ -9,4 +9,5 @@ class Purchase extends Model {
     public function supplier(): BelongsTo { return $this->belongsTo(Supplier::class); }
     public function warehouse(): BelongsTo { return $this->belongsTo(Warehouse::class); }
     public function items(): HasMany { return $this->hasMany(PurchaseItem::class)->orderBy('id'); }
+    public function paymentAllocations(): HasMany { return $this->hasMany(SupplierPaymentAllocation::class); }
 }
