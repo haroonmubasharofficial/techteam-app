@@ -4,6 +4,7 @@ use App\Http\Controllers\CustomerPaymentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliveryChallanController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\SupplierPaymentController;
@@ -50,3 +51,10 @@ Route::get('/supplier-payments/{payment}/print', [SupplierPaymentController::cla
 Route::get('/payables', [SupplierPaymentController::class, 'payables'])->name('payables.index');
 Route::get('/suppliers/{supplier}/outstanding-purchases', [SupplierPaymentController::class, 'purchases'])->name('suppliers.outstandingPurchases');
 Route::get('/suppliers/{supplier}/statement', [SupplierPaymentController::class, 'statement'])->name('supplier_payments.statement');
+
+Route::get('/customers', [PartyController::class, 'customers'])->name('parties.customers');
+Route::get('/customers/create', [PartyController::class, 'createCustomer'])->name('parties.customer_create');
+Route::post('/customers', [PartyController::class, 'storeCustomer'])->name('parties.customer_store');
+Route::get('/suppliers', [PartyController::class, 'suppliers'])->name('parties.suppliers');
+Route::get('/suppliers/create', [PartyController::class, 'createSupplier'])->name('parties.supplier_create');
+Route::post('/suppliers', [PartyController::class, 'storeSupplier'])->name('parties.supplier_store');
