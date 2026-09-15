@@ -14,6 +14,8 @@
             <a href="{{ route('dashboard') }}" class="hover:text-green-700">Dashboard</a>
             <a href="{{ route('quotations.index') }}" class="hover:text-green-700">Quotations</a>
             <a href="{{ route('invoices.index') }}" class="hover:text-green-700">Invoices</a>
+            <a href="{{ route('customer_payments.index') }}" class="hover:text-green-700">Receipts</a>
+            <a href="{{ route('receivables.index') }}" class="hover:text-green-700">Receivables</a>
             <span class="text-gray-400">Purchase</span><span class="text-gray-400">Stock</span><span class="text-gray-400">Parties</span><span class="text-gray-400">Reports</span>
         </nav>
         <div class="ml-auto"><input data-global-search placeholder="Ctrl+K Search" class="w-40 rounded-lg border px-3 py-2 text-sm md:w-56"></div>
