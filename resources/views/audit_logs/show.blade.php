@@ -1,0 +1,8 @@
+@extends('layouts.app')
+@section('content')
+<div class="mb-5 flex items-center justify-between"><div><h1 class="text-2xl font-bold">Audit Record #{{ $auditLog->id }}</h1><p class="text-sm text-gray-600">{{ $auditLog->action }} · {{ $auditLog->created_at?->format('d M Y H:i:s') }}</p></div><a href="{{ route('audit_logs.index') }}" class="rounded-lg border px-4 py-2 text-sm">Back</a></div>
+<div class="grid gap-4 md:grid-cols-2">
+<div class="rounded-xl border bg-white p-5"><h2 class="mb-3 font-semibold">Event</h2><dl class="space-y-2 text-sm"><div><dt class="text-gray-500">User</dt><dd>{{ $auditLog->user?->name ?? 'System' }}{{ $auditLog->user?->email ? ' ('.$auditLog->user->email.')' : '' }}</dd></div><div><dt class="text-gray-500">Action</dt><dd>{{ $auditLog->action }}</dd></div><div><dt class="text-gray-500">Record</dt><dd>{{ $auditLog->auditable_type }} #{{ $auditLog->auditable_id }}</dd></div><div><dt class="text-gray-500">Route</dt><dd>{{ $auditLog->route }}</dd></div><div><dt class="text-gray-500">IP</dt><dd>{{ $auditLog->ip_address }}</dd></div><div><dt class="text-gray-500">User Agent</dt><dd class="break-all">{{ $auditLog->user_agent }}</dd></div></dl></div>
+<div class="space-y-4"><div class="rounded-xl border bg-white p-5"><h2 class="mb-3 font-semibold">Before</h2><pre class="overflow-x-auto rounded-lg bg-gray-50 p-3 text-xs">{{ json_encode($auditLog->old_values ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre></div><div class="rounded-xl border bg-white p-5"><h2 class="mb-3 font-semibold">After</h2><pre class="overflow-x-auto rounded-lg bg-gray-50 p-3 text-xs">{{ json_encode($auditLog->new_values ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre></div></div>
+</div>
+@endsection
