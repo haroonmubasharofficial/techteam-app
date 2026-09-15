@@ -8,6 +8,7 @@ use App\Http\Controllers\PartyController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\SupplierPaymentController;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'))->name('home');
 Route::get('/dashboard', DashboardController::class)->name('dashboard');
+Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations.index');
 Route::get('/quotations/create', [QuotationController::class, 'create'])->name('quotations.create');
 Route::post('/quotations', [QuotationController::class, 'store'])->name('quotations.store');
