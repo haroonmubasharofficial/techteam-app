@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Services\DocumentNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +70,7 @@ class QuotationController extends Controller
 
     private function saveQuotation(Quotation $quotation, array $data): Quotation
     {
-        if (!$quotation->exists) $quotation->quotation_number = $this->nextQuotationNumber($data['quote_date']);
+        if (!$quotation->exists) $quotation->quotation_number = app(DocumentNumberService::class)->next('quotation', $data['quote_date']);
         $quotation->fill(['customer_id' => $data['customer_id'], 'quote_date' => $data['quote_date'], 'valid_until' => $data['valid_until'] ?? null, 'reference' => $data['reference'] ?? null, 'summary' => $data['summary'] ?? null, 'terms' => $data['terms'] ?? null, 'status' => $quotation->status ?: 'draft', 'currency' => 'PKR'])->save();
         $quotation->items()->delete();
         $subtotal = $discountTotal = $taxTotal = $costTotal = $profitTotal = 0.0;
@@ -82,13 +83,5 @@ class QuotationController extends Controller
         $netSubtotal=$subtotal-$discountTotal;
         $quotation->update(['subtotal'=>$netSubtotal,'discount_total'=>$discountTotal,'tax_total'=>$taxTotal,'total_amount'=>$netSubtotal+$taxTotal,'estimated_cost_total'=>$costTotal,'estimated_profit'=>$profitTotal,'estimated_margin_percent'=>$netSubtotal>0?($profitTotal/$netSubtotal)*100:0]);
         return $quotation;
-    }
-
-    private function nextQuotationNumber(string $date): string
-    {
-        $year=date('Y',strtotime($date)); $prefix="QTN-{$year}-";
-        $last=Quotation::where('quotation_number','like',$prefix.'%')->lockForUpdate()->orderByDesc('id')->value('quotation_number');
-        $next=$last?((int)substr($last,-5))+1:1;
-        return $prefix.str_pad((string)$next,5,'0',STR_PAD_LEFT);
     }
 }
