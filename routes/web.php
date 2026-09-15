@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\QuotationController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,3 +15,9 @@ Route::get('/quotations/{quotation}', [QuotationController::class, 'show'])->nam
 Route::get('/quotations/{quotation}/edit', [QuotationController::class, 'edit'])->name('quotations.edit');
 Route::put('/quotations/{quotation}', [QuotationController::class, 'update'])->name('quotations.update');
 Route::get('/quotations/{quotation}/print', [QuotationController::class, 'print'])->name('quotations.print');
+Route::get('/quotations/{quotation}/invoice', [InvoiceController::class, 'createFromQuotation'])->name('invoices.createFromQuotation');
+Route::post('/quotations/{quotation}/invoice', [InvoiceController::class, 'storeFromQuotation'])->name('invoices.storeFromQuotation');
+
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
