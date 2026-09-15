@@ -19,4 +19,5 @@ class Invoice extends Model
     public function customer(): BelongsTo { return $this->belongsTo(Customer::class); }
     public function quotation(): BelongsTo { return $this->belongsTo(Quotation::class); }
     public function items(): HasMany { return $this->hasMany(InvoiceItem::class)->orderBy('line_no'); }
+    public function paymentAllocations(): HasMany { return $this->hasMany(CustomerPaymentAllocation::class); }
 }
