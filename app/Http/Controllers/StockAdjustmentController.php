@@ -3,10 +3,12 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\StockAdjustment;
 use App\Models\Warehouse;
+use App\Services\AuditLogService;
 use App\Services\DocumentNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class StockAdjustmentController extends Controller {
+ public function __construct(private AuditLogService $audit) {}
  public function index(){ $adjustments=StockAdjustment::with('warehouse')->latest('adjustment_date')->latest('id')->paginate(20); return view('stock_adjustments.index',compact('adjustments')); }
  public function create(){ return view('stock_adjustments.create',['warehouses'=>Warehouse::orderBy('name')->get(),'products'=>Product::where('is_active',true)->orderBy('name')->get()]); }
  public function store(Request $request){
@@ -18,7 +20,9 @@ class StockAdjustmentController extends Controller {
     if($line['direction']==='out'){ $available=(float)DB::table('stock_transactions')->where('warehouse_id',$data['warehouse_id'])->where('product_id',$line['product_id'])->selectRaw('COALESCE(SUM(quantity_in-quantity_out),0) AS qty')->value('qty'); if($line['qty']>$available) abort(422,'Insufficient stock for the selected product.'); }
     $adjustment->items()->create(['product_id'=>$line['product_id'],'quantity'=>$line['qty'],'unit'=>$line['unit'],'unit_cost'=>$line['unit_cost'],'direction'=>$line['direction'],'notes'=>$line['notes']??null]);
     DB::table('stock_transactions')->insert(['warehouse_id'=>$data['warehouse_id'],'product_id'=>$line['product_id'],'transaction_type'=>'adjustment','transaction_date'=>$data['adjustment_date'],'quantity_in'=>$line['direction']==='in'?$line['qty']:0,'quantity_out'=>$line['direction']==='out'?$line['qty']:0,'unit_cost'=>$line['unit_cost'],'reference'=>$number,'notes'=>$line['notes']??$data['reason'],'created_at'=>now(),'updated_at'=>now()]);
-   } return $adjustment;
+   }
+   $this->audit->record('stock_adjustment.posted', $adjustment, [], $adjustment->fresh()->load('items')->toArray());
+   return $adjustment;
   });
   return redirect()->route('stock_adjustments.show',$adjustment)->with('success','Stock adjustment posted.');
  }
