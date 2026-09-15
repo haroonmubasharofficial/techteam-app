@@ -28,6 +28,7 @@ class InvoiceController extends Controller
     {
         $quotation->load(['customer', 'items.product', 'invoice']);
         abort_if($quotation->invoice, 409, 'This quotation has already been converted to an invoice.');
+        abort_if($quotation->status === 'invoiced', 409, 'This quotation has already been invoiced.');
         abort_unless($quotation->items->isNotEmpty(), 422, 'The quotation has no items to invoice.');
         return view('invoices.create', compact('quotation'));
     }
@@ -36,6 +37,7 @@ class InvoiceController extends Controller
     {
         $quotation->load('items');
         abort_if($quotation->invoice()->exists(), 409, 'This quotation has already been converted to an invoice.');
+        abort_if($quotation->status === 'invoiced', 409, 'This quotation has already been invoiced.');
         $data = $request->validate([
             'invoice_date' => ['required', 'date'], 'reference' => ['nullable', 'string', 'max:100'], 'summary' => ['nullable', 'string', 'max:255'], 'terms' => ['nullable', 'string'],
             'items' => ['required', 'array', 'size:' . $quotation->items->count(), 'max:15'], 'items.*.actual_cost_unit' => ['required', 'numeric', 'gte:0'],
@@ -44,7 +46,7 @@ class InvoiceController extends Controller
         $invoice = DB::transaction(function () use ($quotation, $data) {
             $invoice = new Invoice();
             $invoice->invoice_number = app(DocumentNumberService::class)->next('invoice', $data['invoice_date']);
-            $invoice->fill(['customer_id' => $quotation->customer_id, 'quotation_id' => $quotation->id, 'invoice_date' => $data['invoice_date'], 'reference' => $data['reference'] ?? $quotation->reference, 'summary' => $data['summary'] ?? $quotation->summary, 'terms' => $data['terms'] ?? $quotation->terms, 'status' => 'draft', 'currency' => $quotation->currency])->save();
+            $invoice->fill(['customer_id' => $quotation->customer_id, 'quotation_id' => $quotation->id, 'invoice_date' => $data['invoice_date'], 'reference' => $data['reference'] ?? $quotation->reference, 'summary' => $data['summary'] ?? $quotation->summary, 'terms' => $data['terms'] ?? $quotation->terms, 'status' => 'issued', 'currency' => $quotation->currency])->save();
             $subtotal = $discountTotal = $taxTotal = $costTotal = $profitTotal = 0.0;
             foreach ($quotation->items as $index => $qItem) {
                 $actualCost = (float)$data['items'][$index]['actual_cost_unit']; $qty = (float)$qItem->quantity; $selling = (float)$qItem->selling_price; $discount = (float)$qItem->discount;
