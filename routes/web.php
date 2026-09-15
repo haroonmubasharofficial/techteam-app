@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CustomerPaymentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliveryChallanController;
 use App\Http\Controllers\InvoiceController;
@@ -30,3 +31,12 @@ Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.
 Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
 Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
 Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
+
+Route::get('/customer-payments', [CustomerPaymentController::class, 'index'])->name('customer_payments.index');
+Route::get('/customer-payments/create', [CustomerPaymentController::class, 'create'])->name('customer_payments.create');
+Route::post('/customer-payments', [CustomerPaymentController::class, 'store'])->name('customer_payments.store');
+Route::get('/customer-payments/{payment}', [CustomerPaymentController::class, 'show'])->name('customer_payments.show');
+Route::get('/customer-payments/{payment}/print', [CustomerPaymentController::class, 'print'])->name('customer_payments.print');
+Route::get('/receivables', [CustomerPaymentController::class, 'receivables'])->name('receivables.index');
+Route::get('/customers/{customer}/outstanding-invoices', [CustomerPaymentController::class, 'invoices'])->name('customers.outstandingInvoices');
+Route::get('/customers/{customer}/statement', [CustomerPaymentController::class, 'statement'])->name('customer_payments.statement');
