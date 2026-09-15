@@ -27,75 +27,42 @@ class StockAdjustmentController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'warehouse_id' => ['required', 'exists:warehouses,id'],
-            'adjustment_date' => ['required', 'date'],
-            'reason' => ['required', 'string', 'max:255'],
-            'notes' => ['nullable', 'string'],
-            'items' => ['required', 'array', 'min:1', 'max:15'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
-            'items.*.qty' => ['required', 'numeric', 'gt:0'],
-            'items.*.unit' => ['required', 'string', 'max:30'],
-            'items.*.unit_cost' => ['required', 'numeric', 'gte:0'],
-            'items.*.direction' => ['required', 'in:in,out'],
-            'items.*.notes' => ['nullable', 'string', 'max:255'],
+            'warehouse_id' => ['required', 'exists:warehouses,id'], 'adjustment_date' => ['required','date'],
+            'reason' => ['required','string','max:255'], 'notes' => ['nullable','string'],
+            'items' => ['required','array','min:1','max:15'], 'items.*.product_id' => ['required','exists:products,id'],
+            'items.*.qty' => ['required','numeric','gt:0'], 'items.*.unit' => ['required','string','max:30'],
+            'items.*.unit_cost' => ['required','numeric','gte:0'], 'items.*.direction' => ['required','in:in,out'],
+            'items.*.notes' => ['nullable','string','max:255'],
         ]);
 
         $adjustment = DB::transaction(function () use ($data) {
-            $last = StockAdjustment::where('adjustment_number', 'like', 'ADJ-' . now()->format('Y') . '-%')->lockForUpdate()->latest('id')->first();
-            $next = $last ? ((int) substr($last->adjustment_number, -5)) + 1 : 1;
-            $number = 'ADJ-' . now()->format('Y') . '-' . str_pad($next, 5, '0', STR_PAD_LEFT);
-
-            $adjustment = StockAdjustment::create([
-                'adjustment_number' => $number,
-                'warehouse_id' => $data['warehouse_id'],
-                'adjustment_date' => $data['adjustment_date'],
-                'reason' => $data['reason'],
-                'status' => 'posted',
-                'notes' => $data['notes'] ?? null,
-            ]);
+            $year = now()->format('Y');
+            $last = StockAdjustment::where('adjustment_number','like',"ADJ-$year-%")->lockForUpdate()->latest('id')->first();
+            $next = $last ? ((int) substr($last->adjustment_number,-5)) + 1 : 1;
+            $number = "ADJ-$year-" . str_pad($next,5,'0',STR_PAD_LEFT);
+            $adjustment = StockAdjustment::create(['adjustment_number'=>$number,'warehouse_id'=>$data['warehouse_id'],'adjustment_date'=>$data['adjustment_date'],'reason'=>$data['reason'],'status'=>'posted','notes'=>$data['notes'] ?? null]);
 
             foreach ($data['items'] as $line) {
                 if ($line['direction'] === 'out') {
-                    $available = (float) DB::table('stock_transactions')->where('warehouse_id', $data['warehouse_id'])->where('product_id', $line['product_id'])->selectRaw("COALESCE(SUM(CASE WHEN direction = 'in' THEN quantity ELSE -quantity END), 0) qty")->value('qty');
-                    if ($line['qty'] > $available) {
-                        abort(422, 'Insufficient stock for the selected product.');
-                    }
+                    $available = (float) DB::table('stock_transactions')->where('warehouse_id',$data['warehouse_id'])->where('product_id',$line['product_id'])->selectRaw('COALESCE(SUM(quantity_in - quantity_out),0)')->value('COALESCE(SUM(quantity_in - quantity_out),0)');
+                    if ($line['qty'] > $available) abort(422,'Insufficient stock for the selected product.');
                 }
-
-                $adjustment->items()->create([
-                    'product_id' => $line['product_id'],
-                    'qty' => $line['qty'],
-                    'unit' => $line['unit'],
-                    'unit_cost' => $line['unit_cost'],
-                    'direction' => $line['direction'],
-                    'notes' => $line['notes'] ?? null,
-                ]);
-
+                $adjustment->items()->create(['product_id'=>$line['product_id'],'qty'=>$line['qty'],'unit'=>$line['unit'],'unit_cost'=>$line['unit_cost'],'direction'=>$line['direction'],'notes'=>$line['notes'] ?? null]);
                 DB::table('stock_transactions')->insert([
-                    'warehouse_id' => $data['warehouse_id'],
-                    'product_id' => $line['product_id'],
-                    'transaction_type' => 'adjustment',
-                    'reference_type' => StockAdjustment::class,
-                    'reference_id' => $adjustment->id,
-                    'transaction_date' => $data['adjustment_date'],
-                    'direction' => $line['direction'],
-                    'quantity' => $line['qty'],
-                    'unit_cost' => $line['unit_cost'],
-                    'notes' => $line['notes'] ?? $data['reason'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'warehouse_id'=>$data['warehouse_id'],'product_id'=>$line['product_id'],'transaction_type'=>'adjustment',
+                    'transaction_date'=>$data['adjustment_date'],'quantity_in'=>$line['direction']==='in' ? $line['qty'] : 0,
+                    'quantity_out'=>$line['direction']==='out' ? $line['qty'] : 0,'unit_cost'=>$line['unit_cost'],
+                    'reference'=>$number,'notes'=>$line['notes'] ?? $data['reason'],'created_at'=>now(),'updated_at'=>now(),
                 ]);
             }
-
             return $adjustment;
         });
-
-        return redirect()->route('stock-adjustments.show', $adjustment)->with('success', 'Stock adjustment posted.');
+        return redirect()->route('stock_adjustments.show',$adjustment)->with('success','Stock adjustment posted.');
     }
 
     public function show(StockAdjustment $stockAdjustment)
     {
-        $stockAdjustment->load(['warehouse', 'items.product']);
+        $stockAdjustment->load(['warehouse','items.product']);
         return view('stock_adjustments.show', compact('stockAdjustment'));
     }
 }
