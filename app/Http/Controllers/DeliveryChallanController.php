@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DeliveryChallan;
 use App\Models\Invoice;
+use App\Services\AuditLogService;
 use App\Services\DocumentNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class DeliveryChallanController extends Controller
 {
+    public function __construct(private AuditLogService $audit) {}
+
     public function index(Request $request): View
     {
         $challans = DeliveryChallan::with('customer')->when($request->filled('q'), function ($query) use ($request) {
@@ -62,6 +65,7 @@ class DeliveryChallanController extends Controller
             $totalRemaining=(float)DB::table('invoice_items')->where('invoice_id',$invoice->id)->sum('quantity');
             $totalDelivered=(float)DB::table('delivery_challan_items')->join('delivery_challans','delivery_challans.id','=','delivery_challan_items.delivery_challan_id')->where('delivery_challans.invoice_id',$invoice->id)->sum('delivery_challan_items.quantity');
             $invoice->update(['status'=>$totalDelivered >= $totalRemaining - 0.0001 ? 'delivered' : 'partially_delivered']);
+            $this->audit->record('delivery_challan.created', $challan, [], $challan->fresh()->load('items')->toArray());
             return $challan;
         });
         return redirect()->route('delivery_challans.show',$challan)->with('success',"Delivery Challan {$challan->challan_number} created.");
