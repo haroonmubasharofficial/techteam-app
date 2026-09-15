@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeliveryChallanController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
@@ -20,6 +21,11 @@ Route::post('/quotations/{quotation}/invoice', [InvoiceController::class, 'store
 Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
 Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
 Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+Route::get('/invoices/{invoice}/delivery-challan', [DeliveryChallanController::class, 'createFromInvoice'])->name('delivery_challans.createFromInvoice');
+Route::post('/invoices/{invoice}/delivery-challan', [DeliveryChallanController::class, 'storeFromInvoice'])->name('delivery_challans.storeFromInvoice');
+Route::get('/delivery-challans', [DeliveryChallanController::class, 'index'])->name('delivery_challans.index');
+Route::get('/delivery-challans/{deliveryChallan}', [DeliveryChallanController::class, 'show'])->name('delivery_challans.show');
+Route::get('/delivery-challans/{deliveryChallan}/print', [DeliveryChallanController::class, 'print'])->name('delivery_challans.print');
 Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
 Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
 Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
