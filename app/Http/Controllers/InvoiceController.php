@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\Quotation;
+use App\Services\AuditLogService;
 use App\Services\DocumentNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
+    public function __construct(private AuditLogService $audit) {}
+
     public function index(Request $request): View
     {
         $invoices = Invoice::with('customer')->when($request->filled('q'), function ($query) use ($request) {
@@ -56,6 +59,7 @@ class InvoiceController extends Controller
             $quotation->update(['status' => 'invoiced']);
             return $invoice;
         });
+        $this->audit->record('invoice.created', $invoice, [], ['invoice_number'=>$invoice->invoice_number,'customer_id'=>$invoice->customer_id,'quotation_id'=>$invoice->quotation_id,'total_amount'=>(float)$invoice->total_amount,'actual_cost_total'=>(float)$invoice->actual_cost_total,'actual_profit'=>(float)$invoice->actual_profit]);
         return redirect()->route('invoices.show', $invoice)->with('success', "Invoice {$invoice->invoice_number} created from quotation.");
     }
 
