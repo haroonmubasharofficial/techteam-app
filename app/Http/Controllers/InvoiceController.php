@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\Quotation;
+use App\Services\DocumentNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,7 @@ class InvoiceController extends Controller
 
         $invoice = DB::transaction(function () use ($quotation, $data) {
             $invoice = new Invoice();
-            $invoice->invoice_number = $this->nextInvoiceNumber($data['invoice_date']);
+            $invoice->invoice_number = app(DocumentNumberService::class)->next('invoice', $data['invoice_date']);
             $invoice->fill(['customer_id' => $quotation->customer_id, 'quotation_id' => $quotation->id, 'invoice_date' => $data['invoice_date'], 'reference' => $data['reference'] ?? $quotation->reference, 'summary' => $data['summary'] ?? $quotation->summary, 'terms' => $data['terms'] ?? $quotation->terms, 'status' => 'draft', 'currency' => $quotation->currency])->save();
             $subtotal = $discountTotal = $taxTotal = $costTotal = $profitTotal = 0.0;
             foreach ($quotation->items as $index => $qItem) {
@@ -60,12 +61,4 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): View { $invoice->load(['customer', 'quotation', 'items.product']); return view('invoices.show', compact('invoice')); }
     public function print(Invoice $invoice): View { $invoice->load(['customer', 'quotation', 'items.product']); return view('invoices.print', compact('invoice')); }
-
-    private function nextInvoiceNumber(string $date): string
-    {
-        $year = date('Y', strtotime($date)); $prefix = "INV-{$year}-";
-        $last = Invoice::where('invoice_number', 'like', $prefix . '%')->lockForUpdate()->orderByDesc('id')->value('invoice_number');
-        $next = $last ? ((int)substr($last, -5)) + 1 : 1;
-        return $prefix . str_pad((string)$next, 5, '0', STR_PAD_LEFT);
-    }
 }
