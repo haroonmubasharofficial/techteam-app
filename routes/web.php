@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerPaymentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliveryChallanController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
@@ -85,7 +86,6 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock_adjustments.create');
     Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock_adjustments.store');
     Route::get('/stock-adjustments/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('stock_adjustments.show');
-
     Route::middleware('role:admin')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
@@ -95,5 +95,10 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::patch('/users/{user}/toggle', [UserController::class, 'toggleActive'])->name('users.toggle');
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit_logs.index');
         Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])->name('audit_logs.show');
+        Route::get('/master-data', [MasterDataController::class, 'index'])->name('master_data.index');
+        Route::post('/master-data/categories', [MasterDataController::class, 'storeCategory'])->name('master_data.categories.store');
+        Route::put('/master-data/categories/{category}', [MasterDataController::class, 'updateCategory'])->name('master_data.categories.update');
+        Route::post('/master-data/units', [MasterDataController::class, 'storeUnit'])->name('master_data.units.store');
+        Route::put('/master-data/units/{unit}', [MasterDataController::class, 'updateUnit'])->name('master_data.units.update');
     });
 });
