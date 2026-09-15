@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DeliveryChallan;
 use App\Models\Invoice;
+use App\Services\DocumentNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,14 +41,13 @@ class DeliveryChallanController extends Controller
             $warehouseId = DB::table('warehouses')->where('name','Main Warehouse')->value('id');
             abort_unless($warehouseId, 422, 'Main Warehouse is not configured.');
             $challan = new DeliveryChallan();
-            $challan->challan_number = $this->nextChallanNumber($data['challan_date']);
+            $challan->challan_number = app(DocumentNumberService::class)->next('delivery_challan', $data['challan_date']);
             $challan->fill(['customer_id'=>$invoice->customer_id,'invoice_id'=>$invoice->id,'challan_date'=>$data['challan_date'],'delivery_date'=>$data['delivery_date']??null,'shipped_date'=>$data['shipped_date']??null,'delivery_challan_for'=>$data['delivery_challan_for']??$invoice->summary,'shipping_to'=>$data['shipping_to']??$invoice->customer->address,'status'=>'issued','terms'=>$data['terms']??null])->save();
-
             $created = 0;
             foreach ($invoice->items as $index=>$item) {
                 $qty=(float)($data['items'][$index]['quantity']??0);
                 if ($qty <= 0) continue;
-                $previouslyDelivered=(float)DB::table('delivery_challan_items')->where('invoice_item_id',$item->id)->sum('quantity');
+                $previouslyDelivered=(float)DB::table('delivery_challan_items')->where('invoice_item_id',$item->id)->whereExists(function($q)use($invoice){$q->select(DB::raw(1))->from('delivery_challans')->whereColumn('delivery_challans.id','delivery_challan_items.delivery_challan_id')->where('delivery_challans.invoice_id',$invoice->id);})->sum('quantity');
                 $remaining=max(0,(float)$item->quantity-$previouslyDelivered);
                 abort_if($qty > $remaining + 0.0001, 422, "Delivery quantity exceeds remaining quantity for {$item->description}. Remaining: {$remaining}.");
                 if ($item->product_id) {
@@ -69,12 +69,4 @@ class DeliveryChallanController extends Controller
 
     public function show(DeliveryChallan $deliveryChallan): View { $deliveryChallan->load(['customer','invoice','items.product']); return view('delivery_challans.show',['challan'=>$deliveryChallan]); }
     public function print(DeliveryChallan $deliveryChallan): View { $deliveryChallan->load(['customer','invoice','items.product']); return view('delivery_challans.print',['challan'=>$deliveryChallan]); }
-
-    private function nextChallanNumber(string $date): string
-    {
-        $year=date('Y',strtotime($date)); $prefix="DC-{$year}-";
-        $last=DeliveryChallan::where('challan_number','like',$prefix.'%')->lockForUpdate()->orderByDesc('id')->value('challan_number');
-        $next=$last?((int)substr($last,-5))+1:1;
-        return $prefix.str_pad((string)$next,5,'0',STR_PAD_LEFT);
-    }
 }
