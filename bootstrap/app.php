@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Application middleware will be added here as the system grows.
+        $middleware->alias(['active.user' => EnsureUserActive::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Exception configuration.
