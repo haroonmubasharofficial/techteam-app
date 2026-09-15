@@ -1,0 +1,8 @@
+@extends('layouts.app')
+@section('content')
+<div class="flex flex-wrap items-end justify-between gap-3 mb-5"><div><div class="text-sm text-gray-500">Sales</div><h1 class="text-2xl font-bold">Quotations</h1></div><a href="{{ route('quotations.create') }}" class="rounded-lg bg-green-700 px-4 py-2 font-bold text-white">+ New Quotation</a></div>
+<form class="mb-4 flex gap-2"><input name="q" value="{{ request('q') }}" placeholder="Search quotation number or customer" class="w-full max-w-md rounded-lg border px-3 py-2"><button class="rounded-lg border bg-white px-4 py-2 font-semibold">Search</button></form>
+<div class="overflow-hidden rounded-xl border bg-white"><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-left"><tr><th class="p-3">Quotation</th><th class="p-3">Date</th><th class="p-3">Customer</th><th class="p-3 text-right">Total PKR</th><th class="p-3">Status</th><th class="p-3 text-right">Actions</th></tr></thead><tbody>
+@forelse($quotations as $q)<tr class="border-t"><td class="p-3 font-semibold">{{ $q->quotation_number }}</td><td class="p-3">{{ $q->quote_date?->format('d-M-Y') }}</td><td class="p-3">{{ $q->customer->company_name }}</td><td class="p-3 text-right">{{ number_format($q->total_amount,2) }}</td><td class="p-3">{{ ucfirst($q->status) }}</td><td class="p-3 text-right whitespace-nowrap"><a class="text-green-700 font-semibold" href="{{ route('quotations.show',$q) }}">View</a> <a class="ml-3 text-blue-700" href="{{ route('quotations.edit',$q) }}">Edit</a></td></tr>@empty<tr><td colspan="6" class="p-8 text-center text-gray-500">No quotations found.</td></tr>@endforelse
+</tbody></table></div><div class="p-3">{{ $quotations->links() }}</div></div>
+@endsection
