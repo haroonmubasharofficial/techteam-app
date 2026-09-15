@@ -49,7 +49,9 @@ class InvoiceController extends Controller
                 $subtotal += $selling * $qty; $discountTotal += $discount; $taxTotal += $tax; $costTotal += $cost; $profitTotal += $profit;
             }
             $netSubtotal = $subtotal - $discountTotal;
-            $invoice->update(['subtotal' => $netSubtotal, 'discount_total' => $discountTotal, 'tax_total' => $taxTotal, 'total_amount' => $netSubtotal + $taxTotal, 'actual_cost_total' => $costTotal, 'actual_profit' => $profitTotal, 'actual_margin_percent' => $netSubtotal > 0 ? ($profitTotal / $netSubtotal) * 100 : 0]);
+            $total = $netSubtotal + $taxTotal;
+            $invoice->update(['subtotal' => $netSubtotal, 'discount_total' => $discountTotal, 'tax_total' => $taxTotal, 'total_amount' => $total, 'actual_cost_total' => $costTotal, 'actual_profit' => $profitTotal, 'actual_margin_percent' => $netSubtotal > 0 ? ($profitTotal / $netSubtotal) * 100 : 0]);
+            DB::table('party_ledger_entries')->insert(['customer_id'=>$invoice->customer_id,'supplier_id'=>null,'entry_date'=>$invoice->invoice_date,'entry_type'=>'invoice','reference_type'=>'invoice','reference_id'=>$invoice->id,'debit'=>$total,'credit'=>0,'description'=>'Invoice '.$invoice->invoice_number,'created_at'=>now(),'updated_at'=>now()]);
             $quotation->update(['status' => 'invoiced']);
             return $invoice;
         });
