@@ -6,11 +6,12 @@ Local development target: Laravel 13, PHP 8.5 target, MySQL LTS, Tailwind CSS 4.
 - Responsive dashboard with live sales, purchase, receivable, payable and stock metrics
 - Keyboard-friendly responsive layout
 - Customer and supplier master creation/listing
+- Product/service master creation and stock quantity view
 - Quotation creation/editing with maximum 15 lines
 - Live estimated cost, profit and margin
 - Invoice creation from quotation with actual cost/profit
 - Customer receivables, payment receipts, invoice allocation and customer statements
-- Purchase receiving with automatic stock-in transactions
+- Purchase receiving with automatic stock-in transactions and supplier payable ledger
 - Supplier payables, supplier payments, purchase allocation and supplier statements
 - Delivery Challans with stock-out transactions, quantity validation and partial delivery support
 - Customer-facing print templates for quotation, invoice, delivery challan and payment receipt
@@ -36,7 +37,7 @@ For cPanel production, use PHP 8.5 if offered by the host, MySQL LTS, HTTPS, OPc
 - Full automated feature/unit test suite and runtime validation with installed Composer/npm dependencies
 - Robust concurrency-safe document numbering/sequences
 - Customer/supplier editing and deactivation workflows
-- Product/category/unit and stock management screens
+- Product editing, category/unit management and stock adjustments
 - Stock valuation and inventory reporting
 - Sales/purchase reporting and profit reports
 - Authentication, authorization, audit logging and user roles
