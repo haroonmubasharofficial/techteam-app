@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliveryChallanController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PartyController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\SupplierPaymentController;
@@ -58,3 +59,7 @@ Route::post('/customers', [PartyController::class, 'storeCustomer'])->name('part
 Route::get('/suppliers', [PartyController::class, 'suppliers'])->name('parties.suppliers');
 Route::get('/suppliers/create', [PartyController::class, 'createSupplier'])->name('parties.supplier_create');
 Route::post('/suppliers', [PartyController::class, 'storeSupplier'])->name('parties.supplier_store');
+
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
