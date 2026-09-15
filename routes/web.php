@@ -8,10 +8,11 @@ use App\Http\Controllers\PartyController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\SupplierPaymentController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/', fn () => redirect()->route('dashboard'))->name('home');
 Route::get('/dashboard', DashboardController::class)->name('dashboard');
 Route::get('/quotations', [QuotationController::class, 'index'])->name('quotations.index');
 Route::get('/quotations/create', [QuotationController::class, 'create'])->name('quotations.create');
@@ -63,3 +64,8 @@ Route::post('/suppliers', [PartyController::class, 'storeSupplier'])->name('part
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
 Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+
+Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock_adjustments.index');
+Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock_adjustments.create');
+Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock_adjustments.store');
+Route::get('/stock-adjustments/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('stock_adjustments.show');
