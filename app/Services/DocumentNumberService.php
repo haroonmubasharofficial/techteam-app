@@ -9,9 +9,15 @@ class DocumentNumberService
 {
     public function next(string $documentType, string $date): string
     {
-        $sequence = DB::table('document_sequences')->where('document_type', $documentType)->lockForUpdate()->first();
+        $year = (int) date('Y', strtotime($date));
+        $sequence = DB::table('document_sequences')
+            ->where('document_type', $documentType)
+            ->where('year', $year)
+            ->lockForUpdate()
+            ->first();
+
         if (!$sequence) {
-            throw new RuntimeException("Document sequence [{$documentType}] is not configured.");
+            throw new RuntimeException("Document sequence [{$documentType}/{$year}] is not configured.");
         }
 
         $number = (int) $sequence->next_number;
@@ -20,6 +26,6 @@ class DocumentNumberService
             'updated_at' => now(),
         ]);
 
-        return $sequence->prefix . '-' . date('Y', strtotime($date)) . '-' . str_pad((string) $number, 5, '0', STR_PAD_LEFT);
+        return $sequence->prefix . '-' . $year . '-' . str_pad((string) $number, 5, '0', STR_PAD_LEFT);
     }
 }
