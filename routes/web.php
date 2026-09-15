@@ -6,6 +6,7 @@ use App\Http\Controllers\DeliveryChallanController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\SupplierPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -40,3 +41,12 @@ Route::get('/customer-payments/{payment}/print', [CustomerPaymentController::cla
 Route::get('/receivables', [CustomerPaymentController::class, 'receivables'])->name('receivables.index');
 Route::get('/customers/{customer}/outstanding-invoices', [CustomerPaymentController::class, 'invoices'])->name('customers.outstandingInvoices');
 Route::get('/customers/{customer}/statement', [CustomerPaymentController::class, 'statement'])->name('customer_payments.statement');
+
+Route::get('/supplier-payments', [SupplierPaymentController::class, 'index'])->name('supplier_payments.index');
+Route::get('/supplier-payments/create', [SupplierPaymentController::class, 'create'])->name('supplier_payments.create');
+Route::post('/supplier-payments', [SupplierPaymentController::class, 'store'])->name('supplier_payments.store');
+Route::get('/supplier-payments/{payment}', [SupplierPaymentController::class, 'show'])->name('supplier_payments.show');
+Route::get('/supplier-payments/{payment}/print', [SupplierPaymentController::class, 'print'])->name('supplier_payments.print');
+Route::get('/payables', [SupplierPaymentController::class, 'payables'])->name('payables.index');
+Route::get('/suppliers/{supplier}/outstanding-purchases', [SupplierPaymentController::class, 'purchases'])->name('suppliers.outstandingPurchases');
+Route::get('/suppliers/{supplier}/statement', [SupplierPaymentController::class, 'statement'])->name('supplier_payments.statement');
