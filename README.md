@@ -39,10 +39,13 @@ cp .env.example .env
 composer install
 php artisan key:generate
 php artisan migrate --seed
+php artisan app:create-admin "Administrator" admin@example.com "CHANGE-THIS-PASSWORD"
 npm install
 npm run build
 php artisan serve
 ```
+
+Replace the example administrator email/password with your own secure credentials. Do not commit `.env` or real credentials.
 
 ## Production / cPanel
 - Use PHP 8.5 if offered by the host; otherwise use a supported Laravel 13 PHP version.
@@ -54,11 +57,13 @@ php artisan serve
 - Build frontend assets before deployment and deploy the generated `public/build` assets.
 - Configure the Laravel writable `storage` and `bootstrap/cache` directories according to the host's permissions.
 - Configure a cron job only for future scheduled/background features; the current core workflow does not require a queue worker.
+- Take regular database and application backups before production updates.
 
 ## Final production checklist
 - Install Composer/npm dependencies and run the full test suite.
 - Run `php artisan migrate --seed` on a clean test database and exercise quotation → invoice → delivery → receipt, purchase → stock → supplier payment, and adjustment flows.
 - Verify document numbering under concurrent requests.
+- Confirm admin/staff access boundaries and audit records.
 - Confirm print output against the final company quotation, invoice and delivery challan branding.
 - Add FBR credentials/API integration when the required FBR environment and credentials are available.
 - Configure production backups, HTTPS, database access, mail and monitoring.
