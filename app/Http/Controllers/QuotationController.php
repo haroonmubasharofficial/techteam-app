@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Services\AuditLogService;
 use App\Services\DocumentNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,14 +14,14 @@ use Illuminate\View\View;
 
 class QuotationController extends Controller
 {
+    public function __construct(private AuditLogService $audit) {}
+
     public function index(Request $request): View
     {
-        $quotations = Quotation::with('customer')
-            ->when($request->filled('q'), function ($query) use ($request) {
-                $term = trim($request->string('q')->toString());
-                $query->where(fn ($q) => $q->where('quotation_number', 'like', "%{$term}%")
-                    ->orWhereHas('customer', fn ($cq) => $cq->where('company_name', 'like', "%{$term}%")));
-            })->latest('quote_date')->latest('id')->paginate(20)->withQueryString();
+        $quotations = Quotation::with('customer')->when($request->filled('q'), function ($query) use ($request) {
+            $term = trim($request->string('q')->toString());
+            $query->where(fn ($q) => $q->where('quotation_number', 'like', "%{$term}%")->orWhereHas('customer', fn ($cq) => $cq->where('company_name', 'like', "%{$term}%")));
+        })->latest('quote_date')->latest('id')->paginate(20)->withQueryString();
         return view('quotations.index', compact('quotations'));
     }
 
@@ -47,7 +48,11 @@ class QuotationController extends Controller
     public function update(Request $request, Quotation $quotation): RedirectResponse
     {
         $data = $this->validated($request);
-        DB::transaction(fn () => $this->saveQuotation($quotation, $data));
+        DB::transaction(function () use ($quotation, $data) {
+            $old = $quotation->load('items')->toArray();
+            $this->saveQuotation($quotation, $data);
+            $this->audit->record('quotation.updated', $quotation, $old, $quotation->fresh()->load('items')->toArray());
+        });
         return redirect()->route('quotations.show', $quotation)->with('success', "Quotation {$quotation->quotation_number} updated.");
     }
 
@@ -70,7 +75,8 @@ class QuotationController extends Controller
 
     private function saveQuotation(Quotation $quotation, array $data): Quotation
     {
-        if (!$quotation->exists) $quotation->quotation_number = app(DocumentNumberService::class)->next('quotation', $data['quote_date']);
+        $isNew = !$quotation->exists;
+        if ($isNew) $quotation->quotation_number = app(DocumentNumberService::class)->next('quotation', $data['quote_date']);
         $quotation->fill(['customer_id' => $data['customer_id'], 'quote_date' => $data['quote_date'], 'valid_until' => $data['valid_until'] ?? null, 'reference' => $data['reference'] ?? null, 'summary' => $data['summary'] ?? null, 'terms' => $data['terms'] ?? null, 'status' => $quotation->status ?: 'draft', 'currency' => 'PKR'])->save();
         $quotation->items()->delete();
         $subtotal = $discountTotal = $taxTotal = $costTotal = $profitTotal = 0.0;
@@ -82,6 +88,7 @@ class QuotationController extends Controller
         }
         $netSubtotal=$subtotal-$discountTotal;
         $quotation->update(['subtotal'=>$netSubtotal,'discount_total'=>$discountTotal,'tax_total'=>$taxTotal,'total_amount'=>$netSubtotal+$taxTotal,'estimated_cost_total'=>$costTotal,'estimated_profit'=>$profitTotal,'estimated_margin_percent'=>$netSubtotal>0?($profitTotal/$netSubtotal)*100:0]);
+        if ($isNew) $this->audit->record('quotation.created', $quotation, [], $quotation->fresh()->load('items')->toArray());
         return $quotation;
     }
 }
